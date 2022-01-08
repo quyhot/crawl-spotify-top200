@@ -134,4 +134,4 @@ __pycache__
 .cache
 
 #secret key
-./secret.py
+.secret.py
