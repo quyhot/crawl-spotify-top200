@@ -132,3 +132,6 @@ dmypy.json
 .idea
 __pycache__
 .cache
+
+#secret key
+./secret.py
