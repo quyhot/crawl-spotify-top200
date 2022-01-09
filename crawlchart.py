@@ -3,17 +3,24 @@ from selenium import webdriver
 import requests
 import time
 import datetime
+import json
 
 ###get all content on home_page
 import getApiSpotify
+import pika
 
 if __name__ == '__main__':
   sp = getApiSpotify.authen()
-  time = datetime.datetime(2018, 5, 9)
+  time = datetime.datetime(2017, 1, 1)
+  # init rabbitmq and queue
+  connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
+  channel = connection.channel()
+  channel.queue_declare(queue='theMusketeer')
+  # execute program
   while (1):
     timestr = time.strftime("%Y-%m-%d")
     print(timestr)
-    home_page = 'https://spotifycharts.com/regional/vn/daily/' + timestr
+    home_page = 'https://spotifycharts.com/regional/global/daily/' + timestr
     print(home_page)
     driver = webdriver.Chrome('./chromedriver')
     driver.get(home_page)
@@ -42,13 +49,19 @@ if __name__ == '__main__':
         tracksTop200 = tracksTop200 + [idTrack]
       count += 1
     print(count)
+    results = []
     if tracksTop50:
-      getApiSpotify.getListAudioFeature(sp, tracksTop50, timestr)
+      results = results + getApiSpotify.getListAudioFeature(sp, tracksTop50, timestr, channel)
     if tracksTop100:
-      getApiSpotify.getListAudioFeature(sp, tracksTop100, timestr)
+      results = results + getApiSpotify.getListAudioFeature(sp, tracksTop100, timestr, channel)
     if tracksTop150:
-      getApiSpotify.getListAudioFeature(sp, tracksTop150, timestr)
+      results = results + getApiSpotify.getListAudioFeature(sp, tracksTop150, timestr, channel)
     if tracksTop200:
-      getApiSpotify.getListAudioFeature(sp, tracksTop200, timestr)
+      results = results + getApiSpotify.getListAudioFeature(sp, tracksTop200, timestr, channel)
+    dataPublish = {
+      'time': timestr,
+      'data': results
+    }
+    channel.basic_publish(exchange='', routing_key='theMusketeer', body=json.dumps(dataPublish))
     time += datetime.timedelta(days=1)
   # create a list of URLS for the landing page of each region collected earlier
