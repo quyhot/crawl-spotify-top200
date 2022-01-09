@@ -24,8 +24,6 @@ def getListAudioFeature(sp, listId, timestr, channel):
     results = list(map(lambda x, y: x | y, genreList, results))
     for r in results:
         r.update({'time': timestr})
-    # with open('./newdata/data-'+ timestr +'.json', 'w+', encoding='utf-8') as f:
-    #     json.dump(results, f, ensure_ascii=False, indent=4)
     return results
 
 # if __name__ == '__main__':
